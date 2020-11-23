@@ -25,7 +25,7 @@
   height: 150px;
 }
 
-.square-null,
+.square-empty,
 .square-md {
   width: 100px;
   height: 100px;
@@ -44,6 +44,6 @@
   align-self: flex-end;
 }
 
-.square:not(.square-null) {
+.square:not(.square-empty) {
   cursor: pointer;
 }

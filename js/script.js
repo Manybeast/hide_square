@@ -1,7 +1,7 @@
 (function ($) {
   const CONSTANTS = {
-    BG_COLORS: ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'],
-    SIZES: [null, 'lg', 'md', 'sm'],
+    BG_COLORS: ['primary', 'success', 'danger', 'warning', 'info'],
+    SIZES: ['empty', 'lg', 'md', 'sm'],
     MAX_SQUARE: 24,
     CREATING_LOOP: 20,
     TIME_SECONDS: 60
@@ -22,7 +22,7 @@
     const square = $('<div/>', {
       'class': `_square square square-${CONSTANTS.SIZES[point]} m-2 text-white h3 ${point && `border border-secondary rounded`} d-flex justify-content-center align-items-center bg-${color}`,
       'data-point': point
-    }).html(point && point);
+    }).html(point !== 0 && point);
 
     return square;
   }
