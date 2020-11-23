@@ -36,6 +36,14 @@
   height: 50px;
 }
 
+.square:nth-child(3n+3) {
+  align-self: flex-start;
+}
+
+.square:nth-child(3n+1) {
+  align-self: flex-end;
+}
+
 .square:not(.square-null) {
   cursor: pointer;
 }

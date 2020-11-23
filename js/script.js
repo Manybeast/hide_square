@@ -1,8 +1,13 @@
-import { BG_COLORS, SIZES, MAX_SQUARE, CREATING_LOOP, TIME_SECONDS } from './constants'
-
 (function ($) {
-  let creatingLoop = CREATING_LOOP;
-  let seconds = TIME_SECONDS;
+  const CONSTANTS = {
+    BG_COLORS: ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'],
+    SIZES: [null, 'lg', 'md', 'sm'],
+    MAX_SQUARE: 24,
+    CREATING_LOOP: 20,
+    TIME_SECONDS: 60
+  };
+  let creatingLoop = CONSTANTS.CREATING_LOOP;
+  let seconds = CONSTANTS.TIME_SECONDS;
   let started = false;
   let countdown = null;
   let currentResult = 0;
@@ -15,7 +20,7 @@ import { BG_COLORS, SIZES, MAX_SQUARE, CREATING_LOOP, TIME_SECONDS } from './con
 
   function createSquare(color = 'transparent', point = 0) {
     const square = $('<div/>', {
-      'class': `_square square square-${SIZES[point]} m-2 text-white h3 ${point && `border border-secondary rounded`} d-flex justify-content-center align-items-center bg-${color}`,
+      'class': `_square square square-${CONSTANTS.SIZES[point]} m-2 text-white h3 ${point && `border border-secondary rounded`} d-flex justify-content-center align-items-center bg-${color}`,
       'data-point': point
     }).html(point && point);
 
@@ -30,8 +35,8 @@ import { BG_COLORS, SIZES, MAX_SQUARE, CREATING_LOOP, TIME_SECONDS } from './con
     }
 
     for (let i = 1; i <= times; i++) {
-      const point = randomInteger(1, SIZES.length - 1);
-      const color = BG_COLORS[randomInteger(0, BG_COLORS.length - 1)];
+      const point = randomInteger(1, CONSTANTS.SIZES.length - 1);
+      const color = CONSTANTS.BG_COLORS[randomInteger(0, CONSTANTS.BG_COLORS.length - 1)];
 
       if(i % 3 === 0) {
         container.append(createSquare());
@@ -114,8 +119,8 @@ import { BG_COLORS, SIZES, MAX_SQUARE, CREATING_LOOP, TIME_SECONDS } from './con
 
   function handleNewGameClick() {
     clearInterval(countdown);
-    seconds = TIME_SECONDS;
-    creatingLoop = CREATING_LOOP;
+    seconds = CONSTANTS.TIME_SECONDS;
+    creatingLoop = CONSTANTS.CREATING_LOOP;
     currentResult = 0;
 
     $('._playingField').removeClass('active');
@@ -142,7 +147,7 @@ import { BG_COLORS, SIZES, MAX_SQUARE, CREATING_LOOP, TIME_SECONDS } from './con
 
     _this.remove();
 
-    if(creatingLoop + count < MAX_SQUARE) {
+    if(creatingLoop + count < CONSTANTS.MAX_SQUARE) {
       creatingLoop = creatingLoop + count;
 
       addSquares(count);
