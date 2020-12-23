@@ -11,6 +11,7 @@
   let started = false;
   let countdown = null;
   let currentResult = 0;
+  let results = [];
 
   function randomInteger(min = 0, max = 2) {
     let rand = min - 0.5 + Math.random() * (max - min + 1);
@@ -19,19 +20,23 @@
   }
 
   function createSquare(color = 'transparent', point = 0) {
-    const square = $('<div/>', {
-      'class': `_square square square-${CONSTANTS.SIZES[point]} m-2 text-white h3 ${point && `border border-secondary rounded`} d-flex justify-content-center align-items-center bg-${color}`,
-      'data-point': point
-    }).html(point !== 0 && point);
+    const squareNode = $('#zero_square').clone();
+    const classNames = `_square square-${CONSTANTS.SIZES[point]} ${point && `border border-secondary rounded`} bg-${color}`
 
-    return square;
+    squareNode
+        .removeAttr('id')
+        .addClass(classNames)
+        .data('point', point)
+        .html(point !== 0 && point);
+
+    return squareNode;
   }
 
   function addSquares(times, newGame = false) {
     const container = $('._playingField');
 
     if(newGame) {
-      container.html('');
+      $('._square').remove();
     }
 
     for (let i = 1; i <= times; i++) {
@@ -47,10 +52,11 @@
   }
 
   function createPlayer(name, result) {
-    const player = $($('._player')[0]).clone();
+    const playerNode = $('#zero_player').clone();
 
-    player
-        .addClass('_reserved')
+    playerNode
+        .removeAttr('id')
+        .addClass('_player')
         .find('._name')
         .html(name)
         .end()
@@ -60,18 +66,38 @@
         .appendTo($('._results'));
   }
 
-  function getResult() {
+  function getResults() {
     let keys = Object.keys(localStorage);
 
     for(let key of keys) {
-      createPlayer(key, localStorage.getItem(key));
+      results.push({
+        name: key,
+        result: localStorage.getItem(key)
+      })
     }
+
+    showResults(results);
   }
 
-  function setResult(name, result) {
-    createPlayer(name, result);
+  function showResults(arr) {
+    $('._player').remove();
 
-    localStorage.setItem(name, result)
+    sortResults(arr).forEach((item) => createPlayer(item.name, item.result));
+  }
+
+  function sortResults(arr) {
+    return arr.sort((a, b) => +a.result < +b.result ? 1 : -1);
+  }
+
+  function setResults(name, result) {
+    localStorage.setItem(name, result);
+
+    results.push({
+      name: name,
+      result: result
+    });
+
+    showResults(results);
   }
 
   function timer(time) {
@@ -131,21 +157,21 @@
   }
 
   function handleSquareClick() {
-    const _this = $(this);
+    const $this = $(this);
     const count = randomInteger();
-    const firstElem = $('._playingField').find('.square')[0];
+    const firstElem = $('._playingField').find('._square')[0];
 
-    if(_this.hasClass('square-null')) return;
+    if($this.hasClass('square-empty')) return;
 
-    currentResult = currentResult + _this.data('point');
+    currentResult = currentResult + $this.data('point');
     --creatingLoop;
 
-    if($(firstElem).hasClass('square-null')) {
+    if($(firstElem).hasClass('square-empty')) {
       $(firstElem).remove();
       --creatingLoop;
     }
 
-    _this.remove();
+    $this.remove();
 
     if(creatingLoop + count < CONSTANTS.MAX_SQUARE) {
       creatingLoop = creatingLoop + count;
@@ -164,7 +190,7 @@
   function saveResult() {
     const input = $('input[name="player-name"]');
 
-    setResult(input.val(), currentResult);
+    setResults(input.val(), currentResult);
 
     input.val('');
 
@@ -174,12 +200,12 @@
 
   function clearResult() {
     localStorage.clear();
-    $('._reserved').remove();
+    $('._player').remove();
   }
 
   $(document).ready(function () {
     addSquares(creatingLoop);
-    getResult();
+    getResults();
 
     $('._start').on('click', handleStartClick);
 
