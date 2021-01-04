@@ -11,7 +11,6 @@
   let started = false;
   let countdown = null;
   let currentResult = 0;
-  let results = [];
 
   function randomInteger(min = 0, max = 2) {
     let rand = min - 0.5 + Math.random() * (max - min + 1);
@@ -66,38 +65,17 @@
         .appendTo($('._results'));
   }
 
-  function getResults() {
-    let keys = Object.keys(localStorage);
+  async function getResults() {
+    let response = await fetch('/users');
+    let users = await response.json();
 
-    for(let key of keys) {
-      results.push({
-        name: key,
-        result: localStorage.getItem(key)
-      })
-    }
-
-    showResults(results);
+    showResults(users);
   }
 
   function showResults(arr) {
     $('._player').remove();
 
-    sortResults(arr).forEach((item) => createPlayer(item.name, item.result));
-  }
-
-  function sortResults(arr) {
-    return arr.sort((a, b) => +a.result < +b.result ? 1 : -1);
-  }
-
-  function setResults(name, result) {
-    localStorage.setItem(name, result);
-
-    results.push({
-      name: name,
-      result: result
-    });
-
-    showResults(results);
+    arr.forEach((item) => createPlayer(item.name, item.result));
   }
 
   function timer(time) {
@@ -185,21 +163,40 @@
   function setModalData() {
     $('._savingResult').html(`${currentResult} points`);
     $('input[name="player-name"]').focus();
+    $('input[name="player-result"]').val(currentResult);
   }
 
-  function saveResult() {
-    const input = $('input[name="player-name"]');
+  async function saveResult() {
+    const playerName = $('input[name="player-name"]');
+    const user = {
+      name: playerName.val(),
+      result: currentResult
+    };
+    const res = await fetch('/results', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify(user)
+    });
 
-    setResults(input.val(), currentResult);
+    getResults();
 
-    input.val('');
+    playerName.val('');
+    $('input[name="player-result"]').val('');
 
     handleNewGameClick();
     $('#saveResult').modal('hide');
   }
 
-  function clearResult() {
-    localStorage.clear();
+  async function clearResult() {
+    const res = await fetch('/clear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: ''
+    });
     $('._player').remove();
   }
 
