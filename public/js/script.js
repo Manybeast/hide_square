@@ -227,6 +227,12 @@
   async function logout() {
     let logout = await fetch('/logout');
 
+    if (logout.ok) {
+      window.location = '/';
+    } else {
+      alert("Error logout");
+    }
+
     localStorage.clear();
   }
 

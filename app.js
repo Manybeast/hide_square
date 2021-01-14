@@ -89,7 +89,8 @@ app.get('/logout', (req, res, next) => {
   res.clearCookie('isAuth');
   res.clearCookie('currentUser');
 
-  res.redirect('/');
+  // res.redirect('/');
+  res.end();
 });
 
 
