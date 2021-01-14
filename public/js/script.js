@@ -4,7 +4,7 @@
     SIZES: ['empty', 'lg', 'md', 'sm'],
     MAX_SQUARE: 24,
     CREATING_LOOP: 20,
-    TIME_SECONDS: 5
+    TIME_SECONDS: 60
   };
   let creatingLoop = CONSTANTS.CREATING_LOOP;
   let seconds = CONSTANTS.TIME_SECONDS;

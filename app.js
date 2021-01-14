@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
   }
 });
 
-app.get('/login', (req, res, next) => {
+app.get('/login', (req, res) => {
   if (req.userAuth) {
     res.redirect('/');
   } else {
@@ -90,7 +90,6 @@ app.get('/logout', (req, res, next) => {
   res.clearCookie('currentUser');
 
   res.redirect('/');
-  res.end();
 });
 
 
