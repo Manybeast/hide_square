@@ -4,7 +4,7 @@
     SIZES: ['empty', 'lg', 'md', 'sm'],
     MAX_SQUARE: 24,
     CREATING_LOOP: 20,
-    TIME_SECONDS: 60
+    TIME_SECONDS: 5
   };
   let creatingLoop = CONSTANTS.CREATING_LOOP;
   let seconds = CONSTANTS.TIME_SECONDS;
@@ -162,14 +162,14 @@
 
   function setModalData() {
     $('._savingResult').html(`${currentResult} points`);
-    $('input[name="player-name"]').focus();
+    $('._savingName').html(JSON.parse(localStorage.getItem('currentUserInfo')).name);
     $('input[name="player-result"]').val(currentResult);
   }
 
   async function saveResult() {
-    const playerName = $('input[name="player-name"]');
+    const playerName = $('._savingName');
     const user = {
-      name: playerName.val(),
+      name: playerName.html(),
       result: currentResult
     };
     const res = await fetch('/results', {
@@ -181,8 +181,9 @@
     });
 
     getResults();
+    getCurrentUser();
 
-    playerName.val('');
+    playerName.html('');
     $('input[name="player-result"]').val('');
 
     handleNewGameClick();
@@ -197,12 +198,42 @@
       },
       body: ''
     });
+    const user = {
+      name: JSON.parse(localStorage.getItem('currentUserInfo')).name,
+      maxResult: 0
+    };
+
+    localStorage.setItem('currentUserInfo', JSON.stringify(user));
+
+    showCurentUserInfo(user);
+
     $('._player').remove();
+  }
+
+  async function getCurrentUser() {
+    const response = await fetch('/currentUserInfo');
+    const currentUserInfo = await response.json();
+
+    localStorage.setItem('currentUserInfo', JSON.stringify(currentUserInfo));
+
+    showCurentUserInfo(currentUserInfo)
+  }
+
+  function showCurentUserInfo(user) {
+    $('._currentName').html(user.name);
+    $('._maxResult').html(user.maxResult);
+  }
+
+  async function logout() {
+    let logout = await fetch('/logout');
+
+    localStorage.clear();
   }
 
   $(document).ready(function () {
     addSquares(creatingLoop);
     getResults();
+    getCurrentUser();
 
     $('._start').on('click', handleStartClick);
 
@@ -215,5 +246,7 @@
     $('._save').on('click', saveResult);
 
     $('._clear').on('click', clearResult);
+
+    $('._logout').on('click', logout);
   });
 })(jQuery);
