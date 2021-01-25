@@ -1,147 +1,171 @@
+const connection = require('./db');
+const ObjectId = require('mongodb').ObjectID;
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+const bcrypt = require( 'bcrypt' );
+const salt = bcrypt.genSaltSync(10);
+const session = require('express-session');
+const sessionParams = {
+  secret: 'secret-word',
+  cookie: {originalMaxAge: 3600000},
+  resave: true,
+  saveUninitialized: true
+};
 
 const app = express();
 const publicPath = path.join(__dirname, 'public');
-
 const port = 3000;
+const usersDbName = 'info';
+const resultsDbName = 'results';
 
-const sortByPoint = (point) => {
-  return (prev, curr) => +prev[point] < +curr[point] ? 1 : -1;
+const isAuth = (req) => req.session.userId || false;
+const isValid = async (body) => {
+  const name = body.username.trim();
+  const login = body.login.trim();
+  const pass = body.password.trim();
+  const userData = await db.collection(usersDbName).findOne({login: login});
+
+  console.log('userData: ',!!userData);
+  console.log("login: ",!(/^((\d+[a-z]+)|([a-z]+\d+))*$/.test(login)));
+  console.log('pass: ',!(/^[a-z0-9]{8,}$/i.test(pass)));
+  console.log('name: ',name.search(/[^\w\s]/gi) > 0);
+  console.log('confirm: ',body.confirm.trim() !== pass);
+
+  if (!!userData ||
+      !(/^((\d+[a-z]+)|([a-z]+\d+))*$/.test(login)) ||
+      !(/^[a-z0-9]{8,}$/i.test(pass)) ||
+      name.search(/[^\w\s]/gi) > 0 ||
+      body.confirm.trim() !== pass
+  ) return false;
+
+  return true;
 };
-const isAuth = (req) => req.cookies.isAuth || false;
 
-let results = [];
+let db;
 
-app.use(express.static(publicPath));
-app.use(bodyParser.json());
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(cookieParser());
+const init = async () => {
+  db = await connection();
 
-app.listen(port, () => {
-  console.log(`Server listens http://localhost:${port}`);
-});
+  app.listen(port, () => {
+    console.log(`Server listens http://localhost:${port}`);
+  });
+  app.use(express.static(publicPath));
+  app.use(bodyParser.json());
+  app.use(express.json());
+  app.use(express.urlencoded({extended: true}));
+  // app.use(cookieParser());
+  app.use(session(sessionParams));
+  app.use((err, req, res, next) => {
+    res.status(400).send(`<pre>${err.message}</pre>`);
+  });
+  app.use((req, res, next) => {
+    // console.log('session', req.session);
+    req.userAuth = isAuth(req);
 
-app.use((err, req, res, next) => {
-  res.status(400).send(`<pre>${err.message}</pre>`);
-});
+    return next();
+  });
 
-app.use((req, res, next) => {
-  req.userAuth = isAuth(req);
+  app.get('/', (req, res) => {
+    if (req.userAuth) {
+      res.sendFile(path.join(publicPath, 'main.html'));
+    } else {
+      res.sendFile(path.join(publicPath, 'login.html'));
+    }
+  });
 
-  return next();
-});
-
-app.get('/', (req, res) => {
-  if (req.userAuth) {
-    res.sendFile(path.join(publicPath, 'main.html'));
-  } else {
-    res.sendFile(path.join(publicPath, 'login.html'));
-  }
-});
-
-app.get('/login', (req, res) => {
-  if (req.userAuth) {
+  app.get('/login', (req, res) => {
     res.redirect('/');
-  } else {
-    res.sendFile(path.join(publicPath, 'login.html'));
-  }
-});
+  });
 
-app.get('/users', (req, res) => {
-  fs.readFile(path.join(publicPath, 'results.json'), 'utf8', (err, data) => {
-    if (err) throw err;
-    if (data === '') return false;
+  app.get('/registration', (req, res) => {
+    res.redirect('/');
+  });
 
-    results = [];
-
-    results = results.concat(JSON.parse(data));
-
-    results.sort(sortByPoint('result'));
-
-    if (results.length > 10)
-      results.slice(0, 10);
+  app.get('/results', async (req, res) => {
+    let results = await db.collection(resultsDbName).find({}).sort({result: -1}).toArray();
 
     res.send(results);
   });
-});
 
-app.get('/currentUserInfo', (req, res) => {
-  const userName = req.cookies.currentUser;
-  const results = fs.readFileSync(path.join(publicPath, 'results.json'), 'utf8');
-  const currentUserResults = JSON.parse(results).filter((item) => item.name === userName);
-  const userInfo = {
-    name: userName
-  };
+  app.get('/currentUserInfo', async (req, res) => {
+    const userId = req.session.userId;
+    let currentUser = await db.collection(resultsDbName).find({id: userId}).sort({result: -1}).toArray();
+    let userInfo= {
+      name: req.session.userName,
+      maxResult: 0
+    };
 
-  currentUserResults.sort(sortByPoint('result'));
-
-  userInfo.maxResult = currentUserResults[0].result;
-
-  res.send(userInfo);
-});
-
-app.get('/logout', (req, res, next) => {
-  res.clearCookie('isAuth');
-  res.clearCookie('currentUser');
-
-  res.end();
-});
-
-
-app.post('/login', (req, res) => {
-  const data = fs.readFileSync(path.join(publicPath, 'users.json'));
-  const user = JSON.parse(data).find((item) => (
-      req.body.username === item.name &&
-      req.body.password === item.pass
-  ));
-
-  if(user) {
-    res.cookie('isAuth', true, {maxAge: 3600000});
-    res.cookie('currentUser', user.name, {maxAge: 3600000});
-  }
-
-  res.redirect('/');
-});
-
-app.post('/results', (req, res)=> {
-  if(!req.body) return res.sendStatus(400);
-
-  results.push(req.body);
-
-  fs.writeFile(
-    path.join(publicPath, 'results.json'),
-      JSON.stringify(results),
-    'utf8',
-    (err) => {
-      if (err) throw err;
-
-      console.log('Results written to file')
+    if (currentUser.length) {
+      userInfo.maxResult = currentUser[0].result;
     }
-  );
 
-  res.end();
-});
+    res.send(userInfo);
+  });
 
-app.post('/clear', (req, res)=> {
-  if(!req.body) return res.sendStatus(400);
+  app.get('/logout', (req, res) => {
+    req.session.destroy();
 
-  results = [];
+    res.end();
+  });
 
-  fs.writeFile(
-      path.join(publicPath, 'results.json'),
-      JSON.stringify(req.body),
-      'utf8',
-      (err) => {
-        if (err) throw err;
+  app.post('/registration', async (req, res) => {
+    if(!isValid(req.body)) return res.sendStatus(400);
 
-        console.log('Results file clear')
+    const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
+    const now = new Date();
+    const setUser = await db.collection(usersDbName).insertOne({
+      name: req.body.username,
+      login: req.body.login,
+      password: bcrypt.hashSync(req.body.password, salt),
+      date: `${now.getDate()}/${now.getMonth() < 9 ? '0' + (now.getMonth() + 1) : now.getMonth()}/${now.getFullYear()}`,
+      ip: ip
+    });
+
+    if(setUser.result.ok) {
+      req.session.userId = newUser.ops[0]._id;
+    }
+
+    res.redirect('/');
+  });
+
+  app.post('/login', async (req, res) => {
+    try {
+      const userData = await db.collection(usersDbName).findOne({login: req.body.login.trim()});
+      const passwordValid = userData && bcrypt.compareSync(req.body.password.trim(), userData.password);
+
+      if(passwordValid) {
+        req.session.userId = userData._id;
+        req.session.userName = userData.name;
+        res.redirect('/');
+      } else {
+        return res.sendStatus(400);
       }
-  );
+    } catch (e) {
+      return res.sendStatus(400);
+    }
+  });
 
-  res.end();
-});
+  app.post('/results', async (req, res)=> {
+    if(!req.body) return res.sendStatus(400);
+
+    const newResults = await db.collection(resultsDbName).insertOne({
+      id: req.session.userId,
+      name: req.session.userName,
+      result: req.body.result,
+    });
+
+    res.send(newResults.ops);
+  });
+
+  app.post('/clear', async (req, res)=> {
+    if(!req.body) return res.sendStatus(400);
+
+    const cleanResults = await db.collection(resultsDbName).deleteMany({});
+
+    res.end();
+  });
+};
+
+init();

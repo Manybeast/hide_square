@@ -4,7 +4,7 @@
     SIZES: ['empty', 'lg', 'md', 'sm'],
     MAX_SQUARE: 24,
     CREATING_LOOP: 20,
-    TIME_SECONDS: 60
+    TIME_SECONDS: 4
   };
   let creatingLoop = CONSTANTS.CREATING_LOOP;
   let seconds = CONSTANTS.TIME_SECONDS;
@@ -66,10 +66,13 @@
   }
 
   async function getResults() {
-    let response = await fetch('/users');
-    let users = await response.json();
+    let response = await fetch('/results');
+    let results = await response.json();
 
-    showResults(users);
+    if (results.length > 10)
+      results.slice(0, 10);
+
+    showResults(results);
   }
 
   function showResults(arr) {
@@ -205,7 +208,7 @@
 
     localStorage.setItem('currentUserInfo', JSON.stringify(user));
 
-    showCurentUserInfo(user);
+    showCurrentUserInfo(user);
 
     $('._player').remove();
   }
@@ -216,10 +219,10 @@
 
     localStorage.setItem('currentUserInfo', JSON.stringify(currentUserInfo));
 
-    showCurentUserInfo(currentUserInfo)
+    showCurrentUserInfo(currentUserInfo)
   }
 
-  function showCurentUserInfo(user) {
+  function showCurrentUserInfo(user) {
     $('._currentName').html(user.name);
     $('._maxResult').html(user.maxResult);
   }
