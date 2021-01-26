@@ -4,14 +4,13 @@
     SIZES: ['empty', 'lg', 'md', 'sm'],
     MAX_SQUARE: 24,
     CREATING_LOOP: 20,
-    TIME_SECONDS: 60
+    TIME_SECONDS: 4
   };
   let creatingLoop = CONSTANTS.CREATING_LOOP;
   let seconds = CONSTANTS.TIME_SECONDS;
   let started = false;
   let countdown = null;
   let currentResult = 0;
-  let results = [];
 
   function randomInteger(min = 0, max = 2) {
     let rand = min - 0.5 + Math.random() * (max - min + 1);
@@ -66,15 +65,12 @@
         .appendTo($('._results'));
   }
 
-  function getResults() {
-    let keys = Object.keys(localStorage);
+  async function getResults() {
+    let response = await fetch('/results');
+    let results = await response.json();
 
-    for(let key of keys) {
-      results.push({
-        name: key,
-        result: localStorage.getItem(key)
-      })
-    }
+    if (results.length > 10)
+      results.slice(0, 10);
 
     showResults(results);
   }
@@ -82,22 +78,7 @@
   function showResults(arr) {
     $('._player').remove();
 
-    sortResults(arr).forEach((item) => createPlayer(item.name, item.result));
-  }
-
-  function sortResults(arr) {
-    return arr.sort((a, b) => +a.result < +b.result ? 1 : -1);
-  }
-
-  function setResults(name, result) {
-    localStorage.setItem(name, result);
-
-    results.push({
-      name: name,
-      result: result
-    });
-
-    showResults(results);
+    arr.forEach((item) => createPlayer(item.name, item.result));
   }
 
   function timer(time) {
@@ -184,28 +165,84 @@
 
   function setModalData() {
     $('._savingResult').html(`${currentResult} points`);
-    $('input[name="player-name"]').focus();
+    $('._savingName').html(JSON.parse(localStorage.getItem('currentUserInfo')).name);
+    $('input[name="player-result"]').val(currentResult);
   }
 
-  function saveResult() {
-    const input = $('input[name="player-name"]');
+  async function saveResult() {
+    const playerName = $('._savingName');
+    const user = {
+      name: playerName.html(),
+      result: currentResult
+    };
+    const res = await fetch('/results', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+      },
+      body: JSON.stringify(user)
+    });
 
-    setResults(input.val(), currentResult);
+    getResults();
+    getCurrentUser();
 
-    input.val('');
+    playerName.html('');
+    $('input[name="player-result"]').val('');
 
     handleNewGameClick();
     $('#saveResult').modal('hide');
   }
 
-  function clearResult() {
-    localStorage.clear();
+  async function clearResult() {
+    const res = await fetch('/clear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: ''
+    });
+    const user = {
+      name: JSON.parse(localStorage.getItem('currentUserInfo')).name,
+      maxResult: 0
+    };
+
+    localStorage.setItem('currentUserInfo', JSON.stringify(user));
+
+    showCurrentUserInfo(user);
+
     $('._player').remove();
+  }
+
+  async function getCurrentUser() {
+    const response = await fetch('/currentUserInfo');
+    const currentUserInfo = await response.json();
+
+    localStorage.setItem('currentUserInfo', JSON.stringify(currentUserInfo));
+
+    showCurrentUserInfo(currentUserInfo)
+  }
+
+  function showCurrentUserInfo(user) {
+    $('._currentName').html(user.name);
+    $('._maxResult').html(user.maxResult);
+  }
+
+  async function logout() {
+    let logout = await fetch('/logout');
+
+    if (logout.ok) {
+      window.location = '/';
+    } else {
+      alert("Error logout");
+    }
+
+    localStorage.clear();
   }
 
   $(document).ready(function () {
     addSquares(creatingLoop);
     getResults();
+    getCurrentUser();
 
     $('._start').on('click', handleStartClick);
 
@@ -218,5 +255,7 @@
     $('._save').on('click', saveResult);
 
     $('._clear').on('click', clearResult);
+
+    $('._logout').on('click', logout);
   });
 })(jQuery);
