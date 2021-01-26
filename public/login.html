@@ -9,7 +9,7 @@
 <body>
 
 <div class="container pt-5">
-  <form class="w-50 mx-auto mt-5 pt-5" action="/login" method="post">
+  <div class="_form w-50 mx-auto mt-5 pt-5">
     <h2 class="mb-1">Hide square game</h2>
     <div class="mb-3">
       <label for="login" class="form-label">Your login</label>
@@ -17,19 +17,20 @@
     </div>
     <div class="mb-3">
       <label for="password" class="form-label">Password</label>
-      <input type="password" name="password" class="form-control" id="password" value="123456test">
+      <input type="password" name="password" class="form-control" id="password" value="123456test1">
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <button type="submit" class="btn btn-primary">Login</button>
-      <a href="/" class="_registration btn btn-outline-primary ml-2">Registration</a>
+      <button type="button" class="_login btn btn-primary">Login</button>
+      <span class="_loginError text-danger mx-3 invisible"></span>
+      <a href="/" class="_openRegistrationModal btn btn-outline-primary">Registration</a>
     </div>
-  </form>
+  </div>
 </div>
 
 <div class="modal fade overflow-hidden" id="registration" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form action="/registration" method="post">
+      <form class="_form" action="/registration" method="post">
         <div class="modal-header">
           <h5 class="modal-title">Registration of a new user in the game</h5>
           <button type="button" class="_close close" data-dismiss="modal" aria-label="Close">
@@ -38,24 +39,24 @@
         </div>
         <div class="modal-body">
           <div class="form-floating mb-3">
-            <label for="floatingLogin">Your login</label>
-            <input type="text" name="login" class="form-control" id="floatingLogin" placeholder="Login" value="tester" required>
+            <label for="regLogin">Your login</label>
+            <input type="text" name="login" class="form-control" id="regLogin" placeholder="Login" value="tester" required>
           </div>
           <div class="form-floating mb-3">
-            <label for="floatingName">Your name</label>
-            <input type="text" name="username" class="form-control" id="floatingName" placeholder="Name" value="Tester" required>
+            <label for="regName">Your name</label>
+            <input type="text" name="username" class="form-control" id="regName" placeholder="Name" value="Tester" required>
           </div>
           <div class="form-floating mb-3">
-            <label for="floatingPassword">Your Password</label>
-            <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Password" value="123456test" required>
+            <label for="regPassword">Your Password</label>
+            <input type="password" name="password" class="form-control" id="regPassword" placeholder="Password" value="123456test" required>
           </div>
           <div class="form-floating">
-            <label for="floatingConfirm">Confirm Password</label>
-            <input type="password" name="confirm" class="form-control" id="floatingConfirm" placeholder="Confirm" value="123456test" required>
+            <label for="regConfirm">Confirm Password</label>
+            <input type="password" name="confirm" class="form-control" id="regConfirm" placeholder="Confirm" value="123456test" required>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100 text-uppercase">Registration</button>
+          <button type="button" class="_registration btn btn-primary w-100 text-uppercase">Registration</button>
         </div>
       </form>
     </div>

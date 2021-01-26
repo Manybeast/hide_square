@@ -61,7 +61,6 @@ const init = async () => {
     res.status(400).send(`<pre>${err.message}</pre>`);
   });
   app.use((req, res, next) => {
-    // console.log('session', req.session);
     req.userAuth = isAuth(req);
 
     return next();
@@ -126,8 +125,6 @@ const init = async () => {
     if(setUser.result.ok) {
       req.session.userId = newUser.ops[0]._id;
     }
-
-    res.redirect('/');
   });
 
   app.post('/login', async (req, res) => {
@@ -135,12 +132,16 @@ const init = async () => {
       const userData = await db.collection(usersDbName).findOne({login: req.body.login.trim()});
       const passwordValid = userData && bcrypt.compareSync(req.body.password.trim(), userData.password);
 
+      if (!userData) {
+        return res.status(401).json({ errorInput: 'LOGIN' });
+      }
+
       if(passwordValid) {
         req.session.userId = userData._id;
         req.session.userName = userData.name;
-        res.redirect('/');
+        return res.end();
       } else {
-        return res.sendStatus(400);
+        return res.status(401).json({ errorInput: 'PASSWORD' });
       }
     } catch (e) {
       return res.sendStatus(400);

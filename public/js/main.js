@@ -233,7 +233,7 @@
     if (logout.ok) {
       window.location = '/';
     } else {
-      alert("Error logout");
+      console.log(logout);
     }
 
     localStorage.clear();
