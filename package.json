@@ -1,0 +1,35 @@
+{
+  "name": "hometasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "body-parser": "^1.19.0",
+    "bootstrap": "^4.5.3",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "jquery": "^3.5.1",
+    "mongodb": "^3.6.3"
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "nodemon": "^2.0.6"
+  },
+  "scripts": {
+    "start": "nodemon app.js",
+    "start_dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Manybeast/hometasks.git"
+  },
+  "author": "Dmitriy Ipatov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Manybeast/hometasks/issues"
+  },
+  "homepage": "https://github.com/Manybeast/hometasks#readme"
+}

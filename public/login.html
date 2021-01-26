@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hide square / Login</title>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="./css/styles.css">
+</head>
+<body>
+
+<div class="container pt-5">
+  <div class="_form w-50 mx-auto mt-5 pt-5">
+    <h2 class="mb-1">Hide square game</h2>
+    <div class="mb-3">
+      <label for="login" class="form-label">Your login</label>
+      <input type="text" name="login" class="form-control" id="login" value="tester">
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" id="password" value="123456test1">
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <button type="button" class="_login btn btn-primary">Login</button>
+      <span class="_loginError text-danger mx-3 invisible"></span>
+      <a href="/" class="_openRegistrationModal btn btn-outline-primary">Registration</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade overflow-hidden" id="registration" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form class="_form" action="/registration" method="post">
+        <div class="modal-header">
+          <h5 class="modal-title">Registration of a new user in the game</h5>
+          <button type="button" class="_close close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-floating mb-3">
+            <label for="regLogin">Your login</label>
+            <input type="text" name="login" class="form-control" id="regLogin" placeholder="Login" value="tester" required>
+          </div>
+          <div class="form-floating mb-3">
+            <label for="regName">Your name</label>
+            <input type="text" name="username" class="form-control" id="regName" placeholder="Name" value="Tester" required>
+          </div>
+          <div class="form-floating mb-3">
+            <label for="regPassword">Your Password</label>
+            <input type="password" name="password" class="form-control" id="regPassword" placeholder="Password" value="123456test" required>
+          </div>
+          <div class="form-floating">
+            <label for="regConfirm">Confirm Password</label>
+            <input type="password" name="confirm" class="form-control" id="regConfirm" placeholder="Confirm" value="123456test" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="_registration btn btn-primary w-100 text-uppercase">Registration</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+<script type="module" src="./js/login.js"></script>
+</body>
+</html>
