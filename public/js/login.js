@@ -30,7 +30,7 @@
     const password = $('#regPassword');
     const confirm = $('#regConfirm');
     const user = {
-      name: $('#regName').val(),
+      username: $('#regName').val(),
       login: $('#regLogin').val(),
       password: password.val(),
       confirm: confirm.val()
@@ -42,15 +42,20 @@
       },
       body: JSON.stringify(user)
     });
+    let result = await registration.json();
 
-    console.log(registration);
+    $('._regError').addClass('invisible');
+    form.find('input').removeClass('is-invalid');
 
     if(registration.ok) {
       window.location = '/';
     } else {
-      password.val();
-      confirm.val();
-      form.find('._loginError').html(`Wrong ${registration.statusText} entered`).removeClass('invisible');
+      password.val('');
+      confirm.val('');
+      $.each(result, (key, val) => {
+        form.find(`._${key}`).html(val).removeClass('invisible');
+        form.find(`._${key}`).prev().addClass('is-invalid');
+      });
     }
   }
 

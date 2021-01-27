@@ -1,0 +1,8 @@
+.regError {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: 4px;
+  font-size: 12px;
+  line-height: 12px;
+}

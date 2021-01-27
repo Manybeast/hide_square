@@ -3,9 +3,7 @@ const ObjectId = require('mongodb').ObjectID;
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-// const cookieParser = require('cookie-parser');
 const bcrypt = require( 'bcrypt' );
-const salt = bcrypt.genSaltSync(10);
 const session = require('express-session');
 const sessionParams = {
   secret: 'secret-word',
@@ -25,22 +23,31 @@ const isValid = async (body) => {
   const name = body.username.trim();
   const login = body.login.trim();
   const pass = body.password.trim();
+  const confirm = body.confirm.trim();
   const userData = await db.collection(usersDbName).findOne({login: login});
+  let verificationData = {};
 
-  console.log('userData: ',!!userData);
-  console.log("login: ",!(/^((\d+[a-z]+)|([a-z]+\d+))*$/.test(login)));
-  console.log('pass: ',!(/^[a-z0-9]{8,}$/i.test(pass)));
-  console.log('name: ',name.search(/[^\w\s]/gi) > 0);
-  console.log('confirm: ',body.confirm.trim() !== pass);
+  if (!!userData) {
+    verificationData.regLoginError = 'The login you entered is already in use';
+  }
 
-  if (!!userData ||
-      !(/^((\d+[a-z]+)|([a-z]+\d+))*$/.test(login)) ||
-      !(/^[a-z0-9]{8,}$/i.test(pass)) ||
-      name.search(/[^\w\s]/gi) > 0 ||
-      body.confirm.trim() !== pass
-  ) return false;
+  if (!(/^[a-z0-9]{3,}$/.test(login))) {
+    verificationData.regLoginError = 'The length must be 3 or more characters. Only small letters or numbers can be used';
+  }
 
-  return true;
+  if (!(/^[a-z0-9]{8,}$/i.test(pass))) {
+    verificationData.regPasswordError = 'The length must be 8 or more characters. Only letters or numbers can be used';
+  }
+
+  if (name.search(/[^\w\s]/gi) > 0 || name === '') {
+    verificationData.regNameError = 'The length must be 3 or more characters. Only letters, space or numbers can be used';
+  }
+
+  if (confirm !== pass || confirm === '') {
+    verificationData.regConfirmError = 'The entered password and password confirmation do not match';
+  }
+
+  return verificationData;
 };
 
 let db;
@@ -55,7 +62,6 @@ const init = async () => {
   app.use(bodyParser.json());
   app.use(express.json());
   app.use(express.urlencoded({extended: true}));
-  // app.use(cookieParser());
   app.use(session(sessionParams));
   app.use((err, req, res, next) => {
     res.status(400).send(`<pre>${err.message}</pre>`);
@@ -110,21 +116,23 @@ const init = async () => {
   });
 
   app.post('/registration', async (req, res) => {
-    if(!isValid(req.body)) return res.sendStatus(400);
+    const verificationResult = await isValid(req.body);
 
-    const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
-    const now = new Date();
-    const setUser = await db.collection(usersDbName).insertOne({
-      name: req.body.username,
-      login: req.body.login,
-      password: bcrypt.hashSync(req.body.password, salt),
-      date: `${now.getDate()}/${now.getMonth() < 9 ? '0' + (now.getMonth() + 1) : now.getMonth()}/${now.getFullYear()}`,
-      ip: ip
-    });
+    if (Object.keys(verificationResult).length) return res.status(400).json(verificationResult);
 
-    if(setUser.result.ok) {
-      req.session.userId = newUser.ops[0]._id;
-    }
+    // const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
+    // const now = new Date();
+    // const setUser = await db.collection(usersDbName).insertOne({
+    //   name: req.body.username,
+    //   login: req.body.login,
+    //   password: bcrypt.hashSync(req.body.password, salt),
+    //   date: `${now.getDate()}/${now.getMonth() < 9 ? '0' + (now.getMonth() + 1) : now.getMonth()}/${now.getFullYear()}`,
+    //   ip: ip
+    // });
+    //
+    // if(setUser.result.ok) {
+    //   req.session.userId = newUser.ops[0]._id;
+    // }
   });
 
   app.post('/login', async (req, res) => {
@@ -132,9 +140,7 @@ const init = async () => {
       const userData = await db.collection(usersDbName).findOne({login: req.body.login.trim()});
       const passwordValid = userData && bcrypt.compareSync(req.body.password.trim(), userData.password);
 
-      if (!userData) {
-        return res.status(401).json({ errorInput: 'LOGIN' });
-      }
+      if (!userData) return res.status(401).json({ errorInput: 'LOGIN' });
 
       if(passwordValid) {
         req.session.userId = userData._id;
