@@ -14,12 +14,12 @@
       },
       body: JSON.stringify(user)
     });
-
-    const result = await response.json();
+    let result;
 
     if(response.ok) {
       window.location = '/';
     } else {
+      result = await response.json();
       password.val('');
       form.find('._loginError').html(`Wrong ${result.errorInput} entered`).removeClass('invisible');
     }
@@ -42,7 +42,7 @@
       },
       body: JSON.stringify(user)
     });
-    let result = await registration.json();
+    let result;
 
     $('._regError').addClass('invisible');
     form.find('input').removeClass('is-invalid');
@@ -50,6 +50,7 @@
     if(registration.ok) {
       window.location = '/';
     } else {
+      result = await registration.json();
       password.val('');
       confirm.val('');
       $.each(result, (key, val) => {

@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const bcrypt = require( 'bcrypt' );
+const salt = bcrypt.genSaltSync(10);
 const session = require('express-session');
 const sessionParams = {
   secret: 'secret-word',
@@ -120,19 +121,24 @@ const init = async () => {
 
     if (Object.keys(verificationResult).length) return res.status(400).json(verificationResult);
 
-    // const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
-    // const now = new Date();
-    // const setUser = await db.collection(usersDbName).insertOne({
-    //   name: req.body.username,
-    //   login: req.body.login,
-    //   password: bcrypt.hashSync(req.body.password, salt),
-    //   date: `${now.getDate()}/${now.getMonth() < 9 ? '0' + (now.getMonth() + 1) : now.getMonth()}/${now.getFullYear()}`,
-    //   ip: ip
-    // });
-    //
-    // if(setUser.result.ok) {
-    //   req.session.userId = newUser.ops[0]._id;
-    // }
+    const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
+    const now = new Date();
+    const user = await db.collection(usersDbName).insertOne({
+      name: req.body.username,
+      login: req.body.login,
+      password: bcrypt.hashSync(req.body.password, salt),
+      date: `${now.getDate()}/${now.getMonth() < 9 ? '0' + (now.getMonth() + 1) : now.getMonth()}/${now.getFullYear()}`,
+      role: 'gamer',
+      ip: ip
+    });
+    const userData = user.ops[0];
+
+    if(user.result.ok) {
+      req.session.userId = userData._id;
+      req.session.userName = userData.name;
+    }
+
+    res.end();
   });
 
   app.post('/login', async (req, res) => {
